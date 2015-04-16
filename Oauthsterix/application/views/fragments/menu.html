@@ -1,0 +1,69 @@
+<html>
+	<head>
+		<style>
+			@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,700,600,300&subset=latin,cyrillic-ext,cyrillic,greek);
+			body{
+				margin: 0;
+				padding: 0;
+				font-weight: 600;
+				font-family: 'Open Sans', sans-serif;
+				font-size: 13.5px;
+				/*font:  'Open Sans', Helvetica, Arial, sans-serif;*/
+			}
+
+
+			div.MENU_ {
+				background-color:  #555555;
+				width: 100%;
+				height: 42px;
+			}
+			ul {
+				margin: 0 auto;
+				padding: 0;
+				width: 550px;
+				height: 40px;
+			}
+			ul li {
+				display: inline;
+				margin: 0 auto;
+			}
+			ul li a.MENU_ITEM_ {
+				height: auto;
+				width: auto;
+				float: left;
+				text-decoration: none;
+				color: white;
+				padding: 11px 66px;
+				background-color:  #555555;
+			}
+			ul li a.MENU_ITEM_ {
+				color: white;
+			}
+			ul li a.MENU_ITEM_:hover {
+				-webkit-animation: fade  0.5s 1;
+				animation: fade 0.5s 1;
+				background-color: white;
+				color: #555555;
+			}
+			
+			@keyframes fade {
+				from {background-color: #555555; color: white; }
+				to {background-color: white; color: #555555; }
+			}
+			@-webkit-keyframes fade {
+				from {background-color:  #555555; color: white; }
+				to {background-color: white; color: #555555; }
+			}
+
+		</style>
+	</head>
+	<body>
+		<div class="MENU_">
+			<ul>
+				<li><a href="/oauthsterix" class="MENU_ITEM_">HOME</a></li>
+				<li><a href="/oauthsterix/oauth/login" class="MENU_ITEM_">LOGIN</a></li>
+				<li><a href="/oauthsterix/oauth/register" class="MENU_ITEM_">REGISTER</a></li>
+			</ul>
+		</div>
+	</body>
+</html>
