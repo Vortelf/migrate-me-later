@@ -1,26 +1,6 @@
-<style type="text/css">
-
-	@keyframes show-error {
-		from {opacity: 0;}
-		to {opacity: 100%;}
-	}
-	@-webkit-keyframes show-error {
-		from {opacity: 0;}
-		to {opacity: 100%;}
-	}
-	.error-msg {
-		-webkit-animation-name: show-error;
-		-webkit-animation-duration: 0.5s;
-		-webkit-animation-iteration-count: 1;
-		/*animation: show-error 0.5s 1;*/
-		display: none;
-		color: #F44336;
-		float: right;
-		font-weight: bold;
-	}
-</style>
-
-<script src="../application/views/md5.js"></script>
+<head>
+	<title>Registration - Oauthsterix</title>
+</head>
 
 <script type="text/javascript">
 	function showElement(target){
@@ -98,44 +78,84 @@
 		}
 
 		// alert("You entered a valid password: " + form.password.value);
-		document.getElementById("validation_check").value = MD5(form.user_name.value);
+		document.getElementById("validation_check").value = 1;
+		// alert(MD5(form.user_name.value));
 		hideElement("password-error");
 		return true;
 	}
-
-	
-
-	
 </script>
 
-<div id="content">
-	<div class="reg_form">
-		<div class="form_title">Sign Up</div>
-		<div class="form_sub_title">It's free and anyone can join</div>
+	
+		<?php echo validation_errors(); ?>
+
+<div class="CONTENT_">
+	<div id="reg_form">
+		<div class="form_title"><h2>Sign Up</h2></div>
 		<?php $attributes = array('onsubmit' => 'return checkForm(this);', 'id' => 'register');?>
 		<?php echo form_open("oauth/register", $attributes); ?>
 		<p>
 			<label for="user_name">User Name:</label><p class="error-msg" id="username-error"></p>
 			<input type="text" id="user_name" name="user_name" value="<?php echo set_value('user_name'); ?>" />
 		</p>
-		<p>
-			<label for="email">Your Email:</label><p class="error-msg" id="email-error"></p>
-			<input type="text" id="email" name="email" value="<?php echo set_value('email'); ?>" />
-		</p>
-		<p>
-			<label for="password">Password:</label><p class="error-msg" id="password-error"></p>
-			<input type="password" id="password" name="password" value="<?php echo set_value('password'); ?>" />
-		</p>
-		<p>
-			<label for="con_password">Confirm Password:<p></p>
-			<input type="password" id="con_password" name="con_password" value="<?php echo set_value('con_password'); ?>" />
-		</p>
+		<fieldset>
+			<legend for="credentials">Login Credentials:</legend>
+			<p>
+				<label for="email">Your Email:</label><p class="error-msg" id="email-error"></p>
+				<input type="text" id="email" name="email" value="<?php echo set_value('email'); ?>" />
+			</p>
+			<p>
+				<label for="password">Password:</label><p class="error-msg" id="password-error"></p>
+				<input type="password" id="password" name="password" value="<?php echo set_value('password'); ?>" />
+			</p>
+			<p>
+				<label for="con_password">Confirm Password:</label><p></p>
+				<input type="password" id="con_password" name="con_password" value="<?php echo set_value('con_password'); ?>" />
+			</p>
+		</fieldset>
+		<fieldset>
+			<legend for="personal_info">Personal Info:</legend>
+			<p>
+				<label for="first_name">First Name:</label>
+				<input type="text" id="first_name" name="first_name" value="<?php echo set_value('first_name'); ?>" />
+			</p>
+			<p>
+				<label for="last_name">Last Name: </label>
+				<input type="text" id="last_name" name="last_name" value="<?php echo set_value('last_name'); ?>" />
+			</p>
+			<label for="age">Date of Birth:</label>
+			<div id="age_select">
+				<select id="ageday" name="ageday" value="<?php echo set_value('ageday'); ?>">
+					<?php for ($i = 1; $i <= 31; $i++) : ?>
+					<option value="<?php echo $i; ?>"><?php echo $i; ?></option>
+					<?php endfor; ?>
+				</select>
+				<select id="agemonth" name="agemonth" value="<?php echo set_value('ageday'); ?>">
+					<?php for ($i = 1; $i <= 12; $i++) : ?>
+					<option value="<?php echo $i; ?>"><?php echo jdmonthname($i*28,3); ?></option>
+					<?php endfor; ?>
+				</select>
+				<select id="ageyear" name="ageyear" value="<?php echo set_value('ageday'); ?>">
+					<?php for ($i = 2015; $i >= 1900; $i--) : ?>
+					<option value="<?php echo $i; ?>"><?php echo $i; ?></option>
+					<?php endfor; ?>
+				</select>
+			</div>
+			<p>
+				<label for="phone">Phone Number: </label>
+				<input type="text" id="phone" name="phone" value="<?php echo set_value('phone'); ?>" />
+			</p>
+			<!-- 
+			<input type="number" min="1" max="31" id="ageday" name="ageday" value="<?php echo set_value('ageday'); ?>" placeholder="DD" />
+			<input type="number" min="1" max="12" id="agemonth" name="agemonth" value="<?php echo set_value('agemonth'); ?>" placeholder="MM"/>
+			<input type="number" min="1900" max="2015" id="ageyear" name="ageyear" value="<?php echo set_value('ageyear'); ?>" placeholder="YYYY" />
+		 	-->
+		</fieldset>
 		<p>
 			<button type="submit" name='submit' class="button">Submit</button>
 		</p>
 			<input type="hidden" id="validation_check" name="validation_check" value="default" />
 		<?php echo form_close(); ?>
-		<?php echo validation_errors('<p class="error-msg" style="display:block;">'); ?>
+		
 		
 	</div><!--<div class="reg_form">-->
 </div><!--<div id="content">-->
