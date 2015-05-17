@@ -173,8 +173,6 @@ class Oauth extends CI_Controller {
 
 	}
 
-
-
 	public function logout() {
 
 		// Removing session data
@@ -189,20 +187,6 @@ class Oauth extends CI_Controller {
 
 
 
-	public function Authorization($client)
-	{
-		$data = $this->session->all_userdata();
-		$data['title'] = 'Authorization Request - Oauthsterix';
-		// echo $client;
-		$data['application_name'] = (isset($client['application_name'])? $client['application_name']: $client);
-		$token = $this->token->generate();
-		// print_r($token);
-		$data['token'] = $token['require_once'];
-		// print_r($data);
-		$this->load->view('fragments/style.html');
-		$this->load->view('authorization.php',$data);
-	}
-
 	public function access_request()
 	{
 		$this->load->model('application');
@@ -214,6 +198,8 @@ class Oauth extends CI_Controller {
 
 		$client['application_name'] = $this->application->get_application_name($client['client_id'])->application_name;
 
+		$throw_error = FALSE;
+
 		if(!$client['application_name'])
 		{
 			$error_args = array(
@@ -224,6 +210,22 @@ class Oauth extends CI_Controller {
 				'action' => "Application Registration",
 				'url' => "/oauth/application_registration/"
 			);
+
+			$throw_error = TRUE;
+
+		} else if(!$client['scope']) {
+			$error_args = array(
+				'title' => 'Authorization Error',
+				'message' => "The scope of your request is missing. </br>
+									Please check your application information and try again.",
+				'action' => FALSE
+			);
+
+			$throw_error = TRUE;
+		}
+
+		if($throw_error)
+		{
 			$this->session->set_flashdata('error_args',$error_args);
 			redirect("/oauth/error");
 		}
@@ -232,9 +234,41 @@ class Oauth extends CI_Controller {
 		$GETREQUEST = "" .  (isset($client['client_id'])? "client_id=" . $client['client_id'] . "&" : "") . 
 		(isset($client['scope'])? "scope=" . $client['scope'] . "&" : "");
 
-		// redirect("/oauth/authorization/".$client['application_name']."?".$GETREQUEST);
-		$this->Authorization($client);
-		// http://localhost/oauthsterix/oauth/access_request?consumer_id=Ru19lQzS1hpAuwTLQLSoFKHU3GbiBhH2
+		redirect("/oauth/authorization/".$client['application_name']."?".$GETREQUEST);
+		// $this->Authorization($client);
+
+		// http://localhost/oauthsterix/oauth/access_request?consumer_id=Ru19lQzS1hpAuwTLQLSoFKHU3GbiBhH2&scope=read:name,email:update:phone_number
+	}
+
+
+
+	public function Authorization($client)
+	{
+		$this->load->model('application');
+
+		$data = $this->session->all_userdata();
+		$data['title'] = 'Authorization Request - Oauthsterix';
+		// echo $client;
+		$data['application_name'] = (isset($client['application_name'])? $client['application_name']: $client);
+		$data['scope'] = (isset($client['scope'])? $client['scope']: $_GET['scope']);
+		
+		$scope = $this->application->get_scopes($data['scope']);
+
+		$data['scope_description'] = $this->application->get_scope_description_array($data['scope']);
+
+		unset($data['scope']);
+
+		$data['scope'] = $scope;
+
+		// print_r($data);
+
+
+		$token = $this->token->generate();
+		// print_r($token);
+		$data['token'] = $token['require_once'];
+		// print_r($data);
+		$this->load->view('fragments/style.html');
+		$this->load->view('authorization.php',$data);
 	}
 
 
@@ -244,9 +278,10 @@ class Oauth extends CI_Controller {
 		$this->load->model('application');
 		$this->load->view('fragments/style.html');
 
-		$this->form_validation->set_rules('application_name', 'Application Name', 'trim|is_unique[applications.name]');
+		$this->form_validation->set_rules('application_name', 'Application Name', 'trim|is_unique[applications.application_name]|required');
 		$this->form_validation->set_error_delimiters('<div class="ERROR_" id="VALIDATION_ERROR_"/>', '</div>');
 		$this->form_validation->set_message('is_unique', 'This %s is already registered.');
+		$this->form_validation->set_message('required', 'You must enter %s.');
 
 		if ($this->form_validation->run() == FALSE)
 		{
@@ -258,6 +293,7 @@ class Oauth extends CI_Controller {
 								'application_name' => $_POST['application_name'],
 								'redirect_uri' => ''
 							);
+
 			$registration_info = $this->application->registration($application_info);
 
 			$this->application_registration_completed($registration_info);
@@ -265,7 +301,19 @@ class Oauth extends CI_Controller {
 	}
 
 
-	public function error()
+
+
+	public function application_registration_completed($registration_info)
+	{
+		$this->load->view('fragments/style.html');
+		$data = $registration_info;
+		$data['json'] = json_encode($data);
+		$data['title']= 'Registration Successful! Application Needs to be Approved.';
+		$this->load->view('application_registration_completed',$data);
+		// print_r($registration_info);
+	}
+
+		public function error()
 	{
 		
 		$this->load->view('fragments/style.html');
@@ -278,16 +326,6 @@ class Oauth extends CI_Controller {
 		$error_args = $_SESSION['error_args'];
 		$this->load->view('fragments/error.php',$error_args);
 
-	}
-
-	public function application_registration_completed($registration_info)
-	{
-		$this->load->view('fragments/style.html');
-		$data = $registration_info;
-		$data['json'] = json_encode($data);
-		$data['title']= 'Registration Successful! Application Needs to be Approved.';
-		$this->load->view('application_registration_completed',$data);
-		// print_r($registration_info);
 	}
 
 }

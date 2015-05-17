@@ -3,6 +3,7 @@
 </head>
 
 <?php echo validation_errors(); ?>
+	
 
 <div class="CONTENT_">
 	<div id="reg_form">

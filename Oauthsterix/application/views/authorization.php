@@ -29,11 +29,22 @@
 	?>
 	<div class="AUTH_SCOPE_">
 		<h3>This app wants to use the following information:</h3>
+		<?php if(isset($scope_description['read'])) { ?>
+		<h4> To Update:</h4>
 		<ul>
-			<li><h4>Your Something</h4></li>
-			<li><h4>Your Something</h4></li>
-			<li><h4>Your Something</h4></li>
+			<?php foreach ($scope_description['read'] as $description) { ?>
+			<li><h4><?php echo $description?></h4></li>
+			<?php } ?>
 		</ul>
+		<?php } ?>
+		<?php if(isset($scope_description['update'])) { ?>
+		<h4> To Update:</h4>
+		<ul>
+			<?php foreach ($scope_description['update'] as $description) { ?>
+			<li><h4><?php echo $description?></h4></li>
+			<?php } ?>
+		</ul>
+		<?php } ?>
 	</div>
 
 	<fieldset>
