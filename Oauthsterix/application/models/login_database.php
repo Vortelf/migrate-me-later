@@ -10,7 +10,8 @@
 	// Read data using username and password
 	public function login($data) {
 
-		$condition = "EMAIL =" . "'" . $data['EMAIL'] . "' AND " . "PASSWORD =" . "'" . $data['PASSWORD'] . "'";
+		$condition = "EMAIL =" . "'" . $data['EMAIL'] . "' AND " . "PASSWORD =" . "'" . $data['PASSWORD'] . "'" . 
+					" OR " . "USERNAME =" . "'" . $data['EMAIL'] . "' AND " . "PASSWORD =" . "'" . $data['PASSWORD'] . "'";
 		$this->db->select('*');
 		$this->db->from('users');
 		$this->db->where($condition);
@@ -26,8 +27,11 @@
 
 	public function build_session($session_data) {
 
+
+
 		$this->session->set_userdata('logged_in', $session_data);
 		$result = $this->login_database->read_user_information($session_data);
+		
 		if($result != false)
 		{
 			$data = array(
@@ -44,7 +48,7 @@
 			
 			redirect("/oauth/personalinfo/");
 
-			$this->load->view('admin_page', $data);
+			// $this->load->view('admin_page', $data);
 
 		}
 
@@ -63,6 +67,19 @@
 		if ($query->num_rows() == 1) {
 			return $query->result();
 		} else {
+			$condition = "USERNAME =" . "'" . $sess_array['email'] . "'";
+			$this->db->select('*');
+			$this->db->from('users');
+			$this->db->where($condition);
+			$this->db->limit(1);
+			$query = $this->db->get();
+
+			if ($query->num_rows() == 1) {
+				return $query->result();
+			} else {
+				return false;
+			}
+
 			return false;
 		}
 	}

@@ -2,19 +2,22 @@
 
 	Class Token extends CI_Model {
 
-		public function generate() {
+		protected $Token;
 
-			$token = array(
-				'timestamp' 	=> time(),
+		public function generate()
+		{
+
+			$Token = array(
+				'timestamp' => time(),
 				'require_once' 	=> md5(mt_rand())
 				);
 
-			return $token;
+			return $Token;
 		}
 
-
+		public function post_token_db() {
+			$this->db->insert('users', $tokeninfo);
+		}
 	}
-
-
 
 ?>

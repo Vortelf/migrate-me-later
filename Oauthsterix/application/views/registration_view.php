@@ -92,7 +92,7 @@
 	<div id="reg_form">
 		<div class="form_title"><h2>Sign Up</h2></div>
 		<?php $attributes = array('onsubmit' => 'return checkForm(this);', 'id' => 'register');?>
-		<?php echo form_open("oauth/register", $attributes); ?>
+		<?php echo form_open("oauth/registration", $attributes); ?>
 		<p>
 			<label for="user_name">User Name:</label><p class="error-msg" id="username-error"></p>
 			<input type="text" id="user_name" name="user_name" value="<?php echo set_value('user_name'); ?>" />

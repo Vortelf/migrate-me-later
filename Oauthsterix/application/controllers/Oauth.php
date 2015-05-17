@@ -16,8 +16,11 @@ class Oauth extends CI_Controller {
 
 		$this->load->library('form_validation');
 
-		$this->load->helper('form');
+		$this->load->helper(array('form', 'url'));
+		$this->load->library('javascript');
+		$this->load->library('javascript/jquery');
 	}
+
 
 	public function index()
 	{	
@@ -28,18 +31,17 @@ class Oauth extends CI_Controller {
 		$this->load->view('index.php');
 		$this->load->view('fragments/footer.html');
 	}
+
 	
-	public function register()
+	public function registration()
 	{	
 		$this->load->view('fragments/style.html');
 		$this->load->view('fragments/menu.html');
 
 
-		$this->load->helper(array('form', 'url'));
-		$this->load->library('javascript');
+		// $this->load->helper(array('form', 'url'));
+		// $this->load->library('javascript');
 		
-		
-		// Form/DB Validation
 
 		$this->form_validation->set_rules('email', 'Email', 'trim|valid_email|is_unique[users.email]');
 		$this->form_validation->set_rules('user_name', 'Username', 'trim|is_unique[users.username]');
@@ -59,7 +61,9 @@ class Oauth extends CI_Controller {
 			$userinfo['USERNAME'] = $_POST['user_name'];
 			$userinfo['EMAIL'] = $_POST['email'];
 			$userinfo['PASSWORD'] = md5($_POST['password']);
-
+			$userinfo['FIRSTNAME'] = $_POST['first_name'];
+			$userinfo['LASTNAME'] = $_POST['last_name'];
+			$userinfo['PHONENUMBER'] = $_POST['phone'];
 			$userinfo['DATE_OF_BIRTH'] = $_POST['ageyear']."-".$_POST['agemonth']."-".$_POST['ageday'];
 
 			$this->login_database->registering($userinfo);
@@ -77,8 +81,6 @@ class Oauth extends CI_Controller {
 		// if($str == md5($_POST['user_name']))
 		if($str == 1)
 		{
-
-
 			return TRUE;
 		}
 		else
@@ -137,9 +139,7 @@ class Oauth extends CI_Controller {
 		
 		$this->form_validation->set_rules('email', 'Email', 'trim|required');
 		$this->form_validation->set_rules('password', 'Password', 'required');
-
-		$logincredentials = '';
-
+		$this->form_validation->set_error_delimiters('<div class="ERROR_" id="VALIDATION_ERROR_"/>', '</div>');
 
 
 		if ($this->form_validation->run() == FALSE) {
@@ -160,11 +160,9 @@ class Oauth extends CI_Controller {
 				);
 				$this->login_database->build_session($session_data);
 
-				// Add user data in session
-
 			} else {
 				$data = array(
-				'error_message' => 'Invalid Username or Password'
+				'error_message' => 'Invalid Email/Username or Password'
 				);
 				$this->load->view('login_view.php', $data);
 			}
@@ -189,6 +187,8 @@ class Oauth extends CI_Controller {
 		redirect("/");
 	}
 
+
+
 	public function Authorization($client)
 	{
 		$data = $this->session->all_userdata();
@@ -196,6 +196,7 @@ class Oauth extends CI_Controller {
 		// echo $client;
 		$data['application_name'] = (isset($client['application_name'])? $client['application_name']: $client);
 		$token = $this->token->generate();
+		// print_r($token);
 		$data['token'] = $token['require_once'];
 		// print_r($data);
 		$this->load->view('fragments/style.html');
@@ -204,16 +205,89 @@ class Oauth extends CI_Controller {
 
 	public function access_request()
 	{
+		$this->load->model('application');
+
 		$client = array(
-			'client_id' => (isset($_GET['consumer_id'])? $_GET['consumer_id'] : NULL), 
-			'application_name' => (isset($_GET['application_name'])? $_GET['application_name'] : NULL),
+			'client_id' => (isset($_GET['consumer_id'])? $_GET['consumer_id'] : NULL ),
 			'scope' => (isset($_GET['scope'])? $_GET['scope'] : NULL),
 			);
+
+		$client['application_name'] = $this->application->get_application_name($client['client_id'])->application_name;
+
+		if(!$client['application_name'])
+		{
+			$error_args = array(
+				'title' => 'Authorization Error',
+				'message' => "Your application credentials doesn't match any registered application. </br>
+									Please check your application information and try again. </br>
+									In case you hadn't registered your applicatino, visit the following link.",
+				'action' => "Application Registration",
+				'url' => "/oauth/application_registration/"
+			);
+			$this->session->set_flashdata('error_args',$error_args);
+			redirect("/oauth/error");
+		}
+
+		// print_r($client);
 		$GETREQUEST = "" .  (isset($client['client_id'])? "client_id=" . $client['client_id'] . "&" : "") . 
 		(isset($client['scope'])? "scope=" . $client['scope'] . "&" : "");
-		// echo $GETREQUEST;
+
 		// redirect("/oauth/authorization/".$client['application_name']."?".$GETREQUEST);
 		$this->Authorization($client);
-		// http://localhost/oauthsterix/oauth/access_request?consumer_id=TestApp&application_name=TestApp
+		// http://localhost/oauthsterix/oauth/access_request?consumer_id=Ru19lQzS1hpAuwTLQLSoFKHU3GbiBhH2
 	}
+
+
+	public function application_registration()
+	{
+
+		$this->load->model('application');
+		$this->load->view('fragments/style.html');
+
+		$this->form_validation->set_rules('application_name', 'Application Name', 'trim|is_unique[applications.name]');
+		$this->form_validation->set_error_delimiters('<div class="ERROR_" id="VALIDATION_ERROR_"/>', '</div>');
+		$this->form_validation->set_message('is_unique', 'This %s is already registered.');
+
+		if ($this->form_validation->run() == FALSE)
+		{
+			$this->load->view('application_registration');
+		}
+		else
+		{
+			$application_info = array(
+								'application_name' => $_POST['application_name'],
+								'redirect_uri' => ''
+							);
+			$registration_info = $this->application->registration($application_info);
+
+			$this->application_registration_completed($registration_info);
+		}
+	}
+
+
+	public function error()
+	{
+		
+		$this->load->view('fragments/style.html');
+		// $error_args = array(
+		// 		'title' => $error['title'],
+		// 		'message' => $error['message'],
+		// 		'action' => $error['action'],
+		// 		'url' => $error['url']
+		// 	);
+		$error_args = $_SESSION['error_args'];
+		$this->load->view('fragments/error.php',$error_args);
+
+	}
+
+	public function application_registration_completed($registration_info)
+	{
+		$this->load->view('fragments/style.html');
+		$data = $registration_info;
+		$data['json'] = json_encode($data);
+		$data['title']= 'Registration Successful! Application Needs to be Approved.';
+		$this->load->view('application_registration_completed',$data);
+		// print_r($registration_info);
+	}
+
 }

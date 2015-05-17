@@ -35,8 +35,8 @@
 		display: block;
 	}
 
-	div.FOOTER_, div.SITE_WRAP_:after {
-		height: 50px; 
+	div.SITE_WRAP_:after {
+		height: 100px; 
 	}
 
 	@keyframes show-error {
@@ -66,10 +66,8 @@
 		-webkit-animation-duration: 0.5s;
 		-webkit-animation-iteration-count: 1;
 		animation: show-error 0.5s 1;
-		/*display: none;*/
-		position: relative;
 		width: 550px;
-		height: 20px;
+		/*height: 20px;*/
 		background: #d00;
 		opacity: 0.7;
 		margin-right: auto;
@@ -78,7 +76,6 @@
 		text-align: center !important;
 		padding: 12px;
 		margin-top: 10px;
-		
 	}
 	
 	div.MENU_WRAP_ {
@@ -137,7 +134,7 @@
 		/*bottom:0;*/
    		width:100%;
 		background-color:  #555;
-		height: auto;
+		/*height: auto;*/
 		/*margin-top: 100px;*/
 		text-align: center;
 		
@@ -162,6 +159,8 @@
 		box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2);
 		-webkit-box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2);
 	}
+
+
 
 
 	fieldset { 
@@ -307,14 +306,29 @@
 		color: white;
 	}
 
-	div.AUTH_SCOPE_ ul{
+	div.AUTH_SCOPE_ ul,
+	div.APP_INFO_ ul{
 		margin: 12px;
 	}
 
-	div.AUTH_SCOPE_ h3 {
+	div.AUTH_SCOPE_ h3,
+	div.APP_INFO_ h3 {
 		color: #24d33a;
 	}
 
-	div.AUTH_SCOPE_ h4 {
+	div.AUTH_SCOPE_ h4,
+	div.APP_INFO_ h4 {
 		margin: 10px 0px;
+		text-align: left;
+	}
+	
+	div.APP_INFO_ p {
+		/*margin-left: 50px;*/
+		background: #fff;
+		color: #000;
+		border-radius: 5px;
+		padding: 2px;
+		padding-left: 10px;
+		width: auto;
+		text-align: center;
 	}
