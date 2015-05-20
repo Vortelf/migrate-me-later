@@ -45,10 +45,6 @@
 			$data['logged_in'] = TRUE;
 			$session_data = $data;
 			$this->session->set_userdata('logged_in', $session_data);
-			
-			
-
-			// $this->load->view('admin_page', $data);
 
 		}
 

@@ -189,6 +189,11 @@ class Oauth extends CI_Controller {
 			);
 
 		$client['application_name'] = $this->application->get_application_name($client['client_id'])->application_name;
+		print_r($this->input->get('redirect_uri'));
+
+		$client['redirect_uri'] = $this->input->get('redirect_uri')? $this->input->get('redirect_uri') : "NA";
+
+
 
 		$throw_error = FALSE;
 
@@ -228,11 +233,11 @@ class Oauth extends CI_Controller {
 
 		// $client['GETREQUEST'] = $GETREQUEST;
 
-		print_r($client);
+		// print_r($client);
 		$date = new DateTime(date("Y-m-d h:i:s"));
 		$date->modify('+1 hour');
 		$client['created_on'] = $date->format('Y-m-d h:i:s');
-		echo $client['created_on'];
+		// echo $client['created_on'];
 
 		$this->application->make_access_request($client);
 
@@ -249,6 +254,10 @@ class Oauth extends CI_Controller {
 		$this->load->model('application');
 		$this->load->view('fragments/style.html');
 
+		$this->form_validation->set_rules('email', 'Email', 'trim|required');
+		$this->form_validation->set_rules('password', 'Password', 'required');
+		$this->form_validation->set_error_delimiters('<div class="ERROR_" id="VALIDATION_ERROR_"/>', '</div>');
+
 		$data = $this->session->all_userdata();
 
 		if(isset($_GET['auth_code'])){
@@ -262,12 +271,26 @@ class Oauth extends CI_Controller {
 			);
 
 			$this->session->set_flashdata('error_args',$error_args);
-			redirect("/oauth/error");
+			// redirect("/oauth/error");
 		}
 
-		print_r($data);
-		echo "</br>";
-		$data = array_merge($data,$this->application->get_request_info($auth_code));
+		$yes = $this->application->get_request_info($auth_code);
+
+		if(0 == $yes)
+		{
+			$error_args = array(
+				'title' => 'Authorization Error',
+				'message' => "Authorization Failure </br>
+								Invalid Authorization Code.",
+				'action' => FALSE
+			);
+
+			$this->session->set_flashdata('error_args',$error_args);
+		} else {
+			$data = array_merge($data,$this->application->get_request_info($auth_code));
+			$data['auth'] = $auth_code;
+		}
+
 		
 
 		$data['title'] = 'Authorization Request - Oauthsterix';
@@ -284,13 +307,18 @@ class Oauth extends CI_Controller {
 
 		$data['scope'] = $scope;
 
-		print_r($data);
+
+		if($this->session->flashdata('token'))
+		{
+			$data['token'] = $this->session->flashdata('token');
+			$this->session->keep_flashdata('token');
+
+		} else { 
+			$data['token'] = $this->token->create();
+			$this->session->set_flashdata('token',$data['token']);
+		}
 
 
-		$token = $this->token->create();
-		// print_r($token);
-		$data['token'] = $token['token'];
-		// print_r($data);
 
 		$data['session_exists'] = FALSE;
 

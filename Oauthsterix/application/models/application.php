@@ -140,21 +140,27 @@
 			$this->db->from('access_requests');
 			$this->db->where($condition);
 			$this->db->limit(1);
-			$result = $this->db->get()->result();
+			$query = $this->db->get();
 
-			return get_object_vars($result[0]);
+			if ($query->num_rows() == 1) {
+				return get_object_vars($query->result[0]);
+			} else {
+				return 0;
+			}
+
+			// return get_object_vars($result[0]);
 		}
 
 		public function authorization_login($data)
 		{
-			$condition = "EMAIL =" . "'" . $data['EMAIL'] . "' AND " . "PASSWORD =" . "'" . $data['PASSWORD'] . "'" . 
-					" OR " . "USERNAME =" . "'" . $data['EMAIL'] . "' AND " . "PASSWORD =" . "'" . $data['PASSWORD'] . "'";
+
+			$condition = "EMAIL =" . "'" .  $this->input->post('email') . "' AND " . "PASSWORD =" . "'" . md5($this->input->post('password')) . "'" . 
+					" OR " . "USERNAME =" . "'" . $this->input->post('email') . "' AND " . "PASSWORD =" . "'" . md5($this->input->post('password')) . "'";
 			$this->db->select('*');
 			$this->db->from('users');
 			$this->db->where($condition);
 			$this->db->limit(1);
 			$query = $this->db->get();
-
 			$result = '';
 
 			if ($query->num_rows() == 1) {
@@ -168,17 +174,29 @@
 				$session_data = array(
 					'email' => $_POST['email']
 				);
-				getController()->login_database->build_session($session_data);
-				redirect("/oauth/personalinfo/");
+				// $this->getController()->model->load('login_database');
+				$this->getController()->login_database->build_session($session_data);
+				
+
+				//redirect to access token
 
 			} else {
-				$data = array(
-				'error_message' => 'Invalid Email/Username or Password'
-				);
-				$this->load->view('login_view.php', $data);
+				$data['error_message'] = 'Invalid Email/Username or Password';
+				// print_r($data);
+				$this->load->view('authorization.php', $data);
 			}
 		}
 
+		public function check_auth_code($auth)
+		{
+
+		}
+
+
+		public function get_token()
+		{
+
+		} 
 
 		// VERY IMPORTANT FUNCTION
 		//

@@ -66,7 +66,7 @@
 		-webkit-animation-duration: 0.5s;
 		-webkit-animation-iteration-count: 1;
 		animation: show-error 0.5s 1;
-		width: 550px;
+		width: 90%;
 		/*height: 20px;*/
 		background: #d00;
 		opacity: 0.7;
@@ -75,7 +75,8 @@
 		color: #fff !important;
 		text-align: center !important;
 		padding: 12px;
-		margin-top: 10px;
+		margin: 10px auto;
+
 	}
 	
 	div.MENU_WRAP_ {

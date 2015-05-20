@@ -2,14 +2,20 @@
 <head>
 	<title>Authorization - Oauthsterix</title>
 </head>
-<?php echo form_open("oauth/access_request"); ?>
+<?php echo form_open("oauth/Authorization?auth_code=".$auth); ?>
 <div class="CONTENT_">
 	<h1>Authorize <?php echo isset($application_name)? $application_name : $_GET['application_name']; ?> to use your account?</h1>
-	<h4>Using token: <?php echo $token?></h4>
+	<h4>Using token: <?php echo $token['token']?></h4>
 		<?php if($session_exists){ ?>
 			<p></p>
 			<?php } else { ?>
 			<?php echo validation_errors(); ?>
+
+			<?php if(isset($error_message)) { ?>
+			<div class="ERROR_" id="VALIDATION_ERROR_"/>
+				<?php echo $error_message;?>
+			</div>
+			<?php }?>
 
 			<div class="SIGNIN_" style="width: auto;">
 				<div id="signin_form">
