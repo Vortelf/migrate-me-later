@@ -1,7 +1,7 @@
 <?php
 $json = $_POST['json'];
 
-json_decode($json);
-echo $json->FIRSTNAME;
-
+$new = json_decode($json);
+echo 'Hello '. $new->FIRSTNAME.' ' .$new->LASTNAME. ' you were born ' .$new->DATE_OF_BIRTH;
+//echo $json;
 ?>
