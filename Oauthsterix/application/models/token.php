@@ -126,6 +126,35 @@
 				return false;
 
 		}
+
+
+		public function get_scopes($token)
+		{
+			$condition = "token = '" . $token . "'";
+			$this->db->select('scope');
+			$this->db->from('tokens');
+			$this->db->where($condition);
+			$this->db->limit(1);
+			$query = $this->db->get();
+
+			if ($query->num_rows() == 1) {
+				return $query->result()[0]->scope;
+			} else {
+				return false;
+			}
+
+		}
+
+		
+			
+
+		function getController()
+		{
+			$controllerInstance = & get_instance();
+			// Calling Controller Method
+			// $controllerData = $controllerInstance->ControllerMethod();
+			return $controllerInstance;
+		}
 	}
 
 ?>

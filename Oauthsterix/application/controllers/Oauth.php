@@ -18,6 +18,7 @@ class Oauth extends CI_Controller {
 		$this->load->helper(array('form', 'url'));
 		$this->load->library('javascript');
 		$this->load->library('javascript/jquery');
+		$this->load->view('fragments/icon.html');
 	}
 
 
@@ -301,8 +302,19 @@ class Oauth extends CI_Controller {
 		$data['title'] = 'Authorization Request - Oauthsterix';
 
 		$data['application_name'] = $this->application->get_application_name($data['client_id'])->application_name;
+
+		if($this->session->flashdata('scope'))
+		{
+			$oldscope = $this->session->flashdata('scope');
+			$this->session->keep_flashdata('scope');
+
+		} else { 
+			$oldscope = $data['scope'];
+			$this->session->set_flashdata('scope',$oldscope);
+		}
 		
 		$scope = $this->application->get_scopes($data['scope']);
+
 
 		$data['scope_description'] = $this->application->get_scope_description_array($data['scope']);
 
@@ -311,15 +323,7 @@ class Oauth extends CI_Controller {
 		$data['scope'] = $scope;
 
 
-		// if($this->session->flashdata('token'))
-		// {
-		// 	$data['token'] = $this->session->flashdata('token');
-		// 	$this->session->keep_flashdata('token');
 
-		// } else { 
-		// 	$data['token'] = $this->token->create();
-		// 	$this->session->set_flashdata('token',$data['token']);
-		// }
 
 
 
@@ -410,24 +414,71 @@ class Oauth extends CI_Controller {
 
 
 
-		$token = $this->token->token_bundle(false);
+		$token = $this->token->token_bundle(true);
 
 
 		print_r(json_encode($token));
 		
-		$get_info = array_merge($get_info,$token['access_token']);
+		$access_token = array_merge($get_info,$token['access_token']);
+		$access_token['scope'] = $this->session->flashdata('scope');
+		$this->token->save_token($access_token);
 
-		$this->token->save_token($get_info);
+		if($token['refresh_token'])
+		{
+			$refresh_token = array_merge($get_info,$token['refresh_token']);
+			$refresh_token['scope'] = $this->session->flashdata('scope');
+			$this->token->save_token($refresh_token);
+		}
 
 
 	}
 
-	public function access_denied($value='')
+
+	public function request_information()
 	{
-		$error = array(
-			'error' => 'access denied' );
-		echo json_encode($error);
+		$this->load->model('application');
+		$this->load->model('token');
+		$this->load->model('scope');
+
+		$data = array(
+			'access_token' => $this->input->get('access_token'), 
+			);
+
+		if($this->token->token_expired($data['access_token']))
+		{
+			$error_args = array(
+				'title' => 'Authorization Error',
+				'message' => "Authorization Failure </br>
+								Access Token is expired.",
+				'action' => FALSE
+			);
+
+			$this->session->set_flashdata('error_args',$error_args);
+			redirect("/oauth/error");
+		}
+
+		
+		$scopes = $this->token->get_scopes($data['access_token']);
+
+		// if(!$scopes)
+		// {
+		// 	$error_args = array(
+		// 		'title' => 'Authorization Error',
+		// 		'message' => "Total Failure. </br>
+		// 						Nor even we can explain what happened.",
+		// 		'action' => FALSE
+		// 	);
+
+		// 	$this->session->set_flashdata('error_args',$error_args);
+		// 	redirect("/oauth/error");
+		// }
+
+		$scope_array = $this->application->get_scopes($scopes);
+		$read = $scope_array['read'];
+
+		print_r( json_encode($this->scope->get_scope_information($read)) );
 	}
+
 
 	public function application_registration()
 	{
@@ -458,8 +509,6 @@ class Oauth extends CI_Controller {
 	}
 
 
-
-
 	public function application_registration_completed($registration_info)
 	{
 		$this->load->view('fragments/style.html');
@@ -470,7 +519,17 @@ class Oauth extends CI_Controller {
 		// print_r($registration_info);
 	}
 
-		public function error()
+
+
+
+	public function access_denied($value='')
+	{
+		$error = array(
+			'error' => 'access denied' );
+		echo json_encode($error);
+	}
+
+	public function error()
 	{
 		
 		$this->load->view('fragments/style.html');
@@ -480,8 +539,14 @@ class Oauth extends CI_Controller {
 		// 		'action' => $error['action'],
 		// 		'url' => $error['url']
 		// 	);
-		$error_args = $_SESSION['error_args'];
-		$this->load->view('fragments/error.php',$error_args);
+		
+		if(isset($_SESSION['error_args']))
+		{
+					$error_args = $_SESSION['error_args'];
+					$this->load->view('fragments/error.php',$error_args);
+		}
+		else
+			$this->load->view('fragments/errorception.php');
 
 	}
 

@@ -173,15 +173,15 @@
 				$session_data = array(
 					'email' => $_POST['email']
 				);
-				// $this->getController()->model->load('login_database');
+				
 				$this->getController()->login_database->build_session($session_data);
 				
 				redirect('/oauth/collect_tokens?'.$data['GETREQUEST']);
-				// print_r($data);
+
 
 			} else {
 				$data['error_message'] = 'Invalid Email/Username or Password';
-				// print_r($data);
+	
 				$this->load->view('authorization.php', $data);
 			}
 		}
