@@ -15,7 +15,6 @@
 		public function registration($appnfo) {
 
 
-
 			$application_info = array(
 				'application_name' => $appnfo['application_name'],
 				'client_id' => $this->generateRandomString(),
@@ -122,6 +121,65 @@
 		}
 
 
+
+		public function make_access_request($data)
+		{
+			unset($data['application_name']);
+			$data['auth_code'] = bin2hex(openssl_random_pseudo_bytes(16));
+			print_r($data);
+			$this->db->insert('access_requests', $data);
+			// $this->getController()->Authorization();
+			redirect('/oauth/Authorization?auth_code=' . $data['auth_code'] );
+		}
+
+
+		public function get_request_info($auth_code)
+		{
+			$condition = "auth_code = '" . $auth_code . "'";
+			$this->db->select('client_id,scope');
+			$this->db->from('access_requests');
+			$this->db->where($condition);
+			$this->db->limit(1);
+			$result = $this->db->get()->result();
+
+			return get_object_vars($result[0]);
+		}
+
+		public function authorization_login($data)
+		{
+			$condition = "EMAIL =" . "'" . $data['EMAIL'] . "' AND " . "PASSWORD =" . "'" . $data['PASSWORD'] . "'" . 
+					" OR " . "USERNAME =" . "'" . $data['EMAIL'] . "' AND " . "PASSWORD =" . "'" . $data['PASSWORD'] . "'";
+			$this->db->select('*');
+			$this->db->from('users');
+			$this->db->where($condition);
+			$this->db->limit(1);
+			$query = $this->db->get();
+
+			$result = '';
+
+			if ($query->num_rows() == 1) {
+				$result = true;
+			} else {
+				$result = false;
+			}
+
+			if($result == TRUE)
+			{
+				$session_data = array(
+					'email' => $_POST['email']
+				);
+				getController()->login_database->build_session($session_data);
+				redirect("/oauth/personalinfo/");
+
+			} else {
+				$data = array(
+				'error_message' => 'Invalid Email/Username or Password'
+				);
+				$this->load->view('login_view.php', $data);
+			}
+		}
+
+
 		// VERY IMPORTANT FUNCTION
 		//
 		// ACCESSING CONTROLLERS FUNCTIONS INSIDE A MODEL
@@ -129,7 +187,9 @@
 		function getController()
 		{
 			$controllerInstance = & get_instance();
-			$controllerData = $controllerInstance->getData();
+			// Calling Controller Method
+			// $controllerData = $controllerInstance->ControllerMethod();
+			return $controllerInstance;
 		}
 
 

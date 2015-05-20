@@ -2,12 +2,11 @@
 <head>
 	<title>Authorization - Oauthsterix</title>
 </head>
-
+<?php echo form_open("oauth/access_request"); ?>
 <div class="CONTENT_">
-	<!-- <?php print_r($application_name) ?> -->
 	<h1>Authorize <?php echo isset($application_name)? $application_name : $_GET['application_name']; ?> to use your account?</h1>
 	<h4>Using token: <?php echo $token?></h4>
-		<?php if(isset($session_info['logged_in']) && $session_info['logged_in']){ ?>
+		<?php if($session_exists){ ?>
 			<p></p>
 			<?php } else { ?>
 			<?php echo validation_errors(); ?>
@@ -29,15 +28,15 @@
 	?>
 	<div class="AUTH_SCOPE_">
 		<h3>This app wants to use the following information:</h3>
-		<?php if(isset($scope_description['read'])) { ?>
-		<h4> To Update:</h4>
+		<?php if($scope_description['read'] != "") { ?>
+		<h4> To Read:</h4>
 		<ul>
 			<?php foreach ($scope_description['read'] as $description) { ?>
 			<li><h4><?php echo $description?></h4></li>
 			<?php } ?>
 		</ul>
 		<?php } ?>
-		<?php if(isset($scope_description['update'])) { ?>
+		<?php if($scope_description['update'] != "") { ?>
 		<h4> To Update:</h4>
 		<ul>
 			<?php foreach ($scope_description['update'] as $description) { ?>
@@ -55,3 +54,5 @@
 
 	</fieldset>
 </div>
+
+<?php echo form_close(); ?>

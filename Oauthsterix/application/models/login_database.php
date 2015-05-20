@@ -46,7 +46,7 @@
 			$session_data = $data;
 			$this->session->set_userdata('logged_in', $session_data);
 			
-			redirect("/oauth/personalinfo/");
+			
 
 			// $this->load->view('admin_page', $data);
 

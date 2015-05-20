@@ -7,7 +7,6 @@ class Oauth extends CI_Controller {
 	public function __construct()
 	{
 		parent::__construct();
-		// $this->load->model('user_model');
 		$this->load->library('session');
 
 		// Load database
@@ -95,14 +94,6 @@ class Oauth extends CI_Controller {
 		$data['title']= 'Registration Successful!';
 		
 		$this->load->view('success.php', $data);
-		// $query = $this->db->query('SELECT * FROM users');
-		// if ($query->num_rows()) {
-		// 	foreach ($query->result() as $row)
-		// 	{
-		// 		echo $row->USERNAME . ' ' . $row->EMAIL . '<br>';
-		// 	}
-		// 	return true;
-		// }
 
 	}
 
@@ -159,6 +150,7 @@ class Oauth extends CI_Controller {
 					'email' => $_POST['email']
 				);
 				$this->login_database->build_session($session_data);
+				redirect("/oauth/personalinfo/");
 
 			} else {
 				$data = array(
@@ -234,7 +226,17 @@ class Oauth extends CI_Controller {
 		$GETREQUEST = "" .  (isset($client['client_id'])? "client_id=" . $client['client_id'] . "&" : "") . 
 		(isset($client['scope'])? "scope=" . $client['scope'] . "&" : "");
 
-		redirect("/oauth/authorization/".$client['application_name']."?".$GETREQUEST);
+		// $client['GETREQUEST'] = $GETREQUEST;
+
+		print_r($client);
+		$date = new DateTime(date("Y-m-d h:i:s"));
+		$date->modify('+1 hour');
+		$client['created_on'] = $date->format('Y-m-d h:i:s');
+		echo $client['created_on'];
+
+		$this->application->make_access_request($client);
+
+		// redirect("/oauth/authorization/".$client['application_name']."?".$GETREQUEST);
 		// $this->Authorization($client);
 
 		// http://localhost/oauthsterix/oauth/access_request?consumer_id=Ru19lQzS1hpAuwTLQLSoFKHU3GbiBhH2&scope=read:name,email:update:phone_number
@@ -242,15 +244,37 @@ class Oauth extends CI_Controller {
 
 
 
-	public function Authorization($client)
+	public function Authorization()
 	{
 		$this->load->model('application');
+		$this->load->view('fragments/style.html');
 
 		$data = $this->session->all_userdata();
+
+		if(isset($_GET['auth_code'])){
+			$auth_code = $_GET['auth_code'];
+		} else {
+			$error_args = array(
+				'title' => 'Authorization Error',
+				'message' => "Authorization Failure </br>
+								Authentication Code is missing.",
+				'action' => FALSE
+			);
+
+			$this->session->set_flashdata('error_args',$error_args);
+			redirect("/oauth/error");
+		}
+
+		print_r($data);
+		echo "</br>";
+		$data = array_merge($data,$this->application->get_request_info($auth_code));
+		
+
 		$data['title'] = 'Authorization Request - Oauthsterix';
-		// echo $client;
-		$data['application_name'] = (isset($client['application_name'])? $client['application_name']: $client);
-		$data['scope'] = (isset($client['scope'])? $client['scope']: $_GET['scope']);
+
+		// $data['application_name'] = (isset($client['application_name'])? $client['application_name']: $client);
+
+		$data['application_name'] = $this->application->get_application_name($data['client_id'])->application_name;
 		
 		$scope = $this->application->get_scopes($data['scope']);
 
@@ -260,15 +284,34 @@ class Oauth extends CI_Controller {
 
 		$data['scope'] = $scope;
 
-		// print_r($data);
+		print_r($data);
 
 
-		$token = $this->token->generate();
+		$token = $this->token->create();
 		// print_r($token);
-		$data['token'] = $token['require_once'];
+		$data['token'] = $token['token'];
 		// print_r($data);
-		$this->load->view('fragments/style.html');
-		$this->load->view('authorization.php',$data);
+
+		$data['session_exists'] = FALSE;
+
+		if($this->session->userdata('logged_in'))
+		{
+			$data['session_exists'] = TRUE;
+			$this->load->view("authorization.php",$data);
+		} else {
+			if ($this->form_validation->run() == FALSE) 
+			{
+				$this->load->view("authorization.php",$data);
+			} else {
+				$this->application->authorization_login($data);
+			}
+		}
+		
+
+
+
+
+		
 	}
 
 
