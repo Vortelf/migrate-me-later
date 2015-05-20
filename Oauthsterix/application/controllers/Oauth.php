@@ -192,7 +192,7 @@ class Oauth extends CI_Controller {
 		$client['application_name'] = $this->application->get_application_name($client['client_id'])->application_name;
 		print_r($this->input->get('redirect_uri'));
 
-		$client['redirect_uri'] = $this->input->get('redirect_uri')? $this->input->get('redirect_uri') : "NA";
+		$client['redirect_uri'] = $this->input->get('redirect_uri')? $this->input->get('redirect_uri') : "/oauth/post_test";
 
 
 
@@ -574,7 +574,7 @@ class Oauth extends CI_Controller {
 
 	public function post_test()
 	{
-		print_r($this->input->post());
+		print_r($this->input->post('json'));
 	}
 
 }
