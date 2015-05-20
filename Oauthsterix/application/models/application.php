@@ -128,7 +128,6 @@
 			$data['auth_code'] = bin2hex(openssl_random_pseudo_bytes(16));
 			print_r($data);
 			$this->db->insert('access_requests', $data);
-			// $this->getController()->Authorization();
 			redirect('/oauth/Authorization?auth_code=' . $data['auth_code'] );
 		}
 
@@ -136,19 +135,19 @@
 		public function get_request_info($auth_code)
 		{
 			$condition = "auth_code = '" . $auth_code . "'";
-			$this->db->select('client_id,scope');
+			$this->db->select('client_id,scope,redirect_uri');
 			$this->db->from('access_requests');
 			$this->db->where($condition);
 			$this->db->limit(1);
 			$query = $this->db->get();
+			$result = $query->result();
 
 			if ($query->num_rows() == 1) {
-				return get_object_vars($query->result[0]);
+				return get_object_vars($result[0]);
 			} else {
-				return 0;
+				return false;
 			}
-
-			// return get_object_vars($result[0]);
+			
 		}
 
 		public function authorization_login($data)
@@ -177,8 +176,8 @@
 				// $this->getController()->model->load('login_database');
 				$this->getController()->login_database->build_session($session_data);
 				
-
-				//redirect to access token
+				redirect('/oauth/collect_tokens?'.$data['GETREQUEST']);
+				// print_r($data);
 
 			} else {
 				$data['error_message'] = 'Invalid Email/Username or Password';
@@ -186,17 +185,6 @@
 				$this->load->view('authorization.php', $data);
 			}
 		}
-
-		public function check_auth_code($auth)
-		{
-
-		}
-
-
-		public function get_token()
-		{
-
-		} 
 
 		// VERY IMPORTANT FUNCTION
 		//

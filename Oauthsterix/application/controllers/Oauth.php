@@ -227,17 +227,17 @@ class Oauth extends CI_Controller {
 			redirect("/oauth/error");
 		}
 
-		// print_r($client);
-		$GETREQUEST = "" .  (isset($client['client_id'])? "client_id=" . $client['client_id'] . "&" : "") . 
-		(isset($client['scope'])? "scope=" . $client['scope'] . "&" : "");
+
+		// $GETREQUEST = "" .  (isset($client['client_id'])? "client_id=" . $client['client_id'] . "&" : "") . 
+		// (isset($client['scope'])? "scope=" . $client['scope'] . "&" : "");
 
 		// $client['GETREQUEST'] = $GETREQUEST;
 
-		// print_r($client);
+
 		$date = new DateTime(date("Y-m-d h:i:s"));
 		$date->modify('+1 hour');
 		$client['created_on'] = $date->format('Y-m-d h:i:s');
-		// echo $client['created_on'];
+
 
 		$this->application->make_access_request($client);
 
@@ -271,12 +271,11 @@ class Oauth extends CI_Controller {
 			);
 
 			$this->session->set_flashdata('error_args',$error_args);
-			// redirect("/oauth/error");
+			redirect("/oauth/error");
 		}
 
-		$yes = $this->application->get_request_info($auth_code);
 
-		if(0 == $yes)
+		if(!$this->application->get_request_info($auth_code))
 		{
 			$error_args = array(
 				'title' => 'Authorization Error',
@@ -286,16 +285,14 @@ class Oauth extends CI_Controller {
 			);
 
 			$this->session->set_flashdata('error_args',$error_args);
+			redirect("/oauth/error");
 		} else {
 			$data = array_merge($data,$this->application->get_request_info($auth_code));
 			$data['auth'] = $auth_code;
 		}
-
 		
 
 		$data['title'] = 'Authorization Request - Oauthsterix';
-
-		// $data['application_name'] = (isset($client['application_name'])? $client['application_name']: $client);
 
 		$data['application_name'] = $this->application->get_application_name($data['client_id'])->application_name;
 		
@@ -308,40 +305,96 @@ class Oauth extends CI_Controller {
 		$data['scope'] = $scope;
 
 
-		if($this->session->flashdata('token'))
-		{
-			$data['token'] = $this->session->flashdata('token');
-			$this->session->keep_flashdata('token');
+		// if($this->session->flashdata('token'))
+		// {
+		// 	$data['token'] = $this->session->flashdata('token');
+		// 	$this->session->keep_flashdata('token');
 
-		} else { 
-			$data['token'] = $this->token->create();
-			$this->session->set_flashdata('token',$data['token']);
-		}
+		// } else { 
+		// 	$data['token'] = $this->token->create();
+		// 	$this->session->set_flashdata('token',$data['token']);
+		// }
 
 
 
 		$data['session_exists'] = FALSE;
+		$form_submit = $this->input->post('formsubmit');
+		if($form_submit == "cancel")
+		{
+			redirect('/oauth/access_denied');
+		}
 
 		if($this->session->userdata('logged_in'))
 		{
 			$data['session_exists'] = TRUE;
 			$this->load->view("authorization.php",$data);
+			
+			if($form_submit == "submit")
+			{
+
+				$GETREQUEST = "grant_type=authorization_code" . "&" . "auth_code=". $data['auth'] . "&" .
+								"client_id=" . $data['client_id'] . "&" . "redirect_uri=" . $data['redirect_uri'];
+
+				redirect('/oauth/collect_tokens?'.$GETREQUEST);
+			} else if($form_submit == "cancel") {
+				redirect('/oauth/access_denied');
+			}
 		} else {
 			if ($this->form_validation->run() == FALSE) 
 			{
 				$this->load->view("authorization.php",$data);
 			} else {
-				$this->application->authorization_login($data);
+				$data['GETREQUEST'] = "grant_type=authorization_code" . "&" . "auth_code=". $data['auth'] . "&" .
+								"client_id=" . $data['client_id'] . "&" . "redirect_uri=" . $data['redirect_uri'];
+ 				$this->application->authorization_login($data);
 			}
 		}
-		
-
-
-
-
-		
+				
 	}
 
+	public function collect_tokens()
+	{
+		$this->load->model('application');
+		$this->load->model('token');
+
+		$get_info = array(
+			'grant_type' => $this->input->get('grant_type'),
+			'redirect_uri' => $this->input->get('redirect_uri'),
+			'client_id' => $this->input->get('client_id'),
+			// 'client_secret' => $this->input->get('client_secret'),
+			 );
+
+		if($get_info['grant_type'] == "authorization_code")
+			$get_info['auth_code'] = $this->input->get('auth_code');
+		else 
+		// if($get_info['grant_type'] == "password")
+		// {
+		// 			$get_indo['username'] == $this->input->get('username');
+		// 			$get_indo['password'] == $this->input->get('password');
+		// }
+		// else
+		if($get_info['grant_type'] == "refresh_token")
+			$get_info['refresh_token'] = $this->input->get('refresh_token');
+
+		$token = $this->token->token_bundle(false);
+
+
+		print_r(json_encode($token));
+		echo "</br>";
+		
+		$get_info = array_merge($get_info,$token['access_token']);
+
+		$this->token->save_token($get_info);
+
+
+	}
+
+	public function access_denied($value='')
+	{
+		$error = array(
+			'error' => 'access denied' );
+		echo json_encode($error);
+	}
 
 	public function application_registration()
 	{

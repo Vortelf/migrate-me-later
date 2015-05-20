@@ -2,10 +2,12 @@
 <head>
 	<title>Authorization - Oauthsterix</title>
 </head>
-<?php echo form_open("oauth/Authorization?auth_code=".$auth); ?>
+
+<?php $attributes = array('id' => 'auth');?>
+<?php echo form_open("oauth/Authorization?auth_code=".$auth, $attributes); ?>
 <div class="CONTENT_">
 	<h1>Authorize <?php echo isset($application_name)? $application_name : $_GET['application_name']; ?> to use your account?</h1>
-	<h4>Using token: <?php echo $token['token']?></h4>
+	<!-- <h4>Using token: <?php echo $token['token']?></h4> -->
 		<?php if($session_exists){ ?>
 			<p></p>
 			<?php } else { ?>
@@ -54,9 +56,9 @@
 
 	<fieldset>
 		<legend>Authorize <?php echo $application_name ?> access to use your account?</legend>
-		<input type="submit" value="Authorize Application" id="ALLOW_">
+		<button id="SUBMIT" name="formsubmit" type="submit" value="submit">Authorize Application</button>
 
-		<input id="CANCEL" name="cancel" type="submit" value="Cancel">
+		<button id="CANCEL" name="formsubmit" type="submit" value="cancel">Cancel</button>
 
 	</fieldset>
 </div>
