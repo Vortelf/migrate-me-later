@@ -238,6 +238,12 @@ class Oauth extends CI_Controller {
 		$date->modify('+1 hour');
 		$client['created_on'] = $date->format('Y-m-d h:i:s');
 
+		
+		$client['TTL'] = new DateTime(date("Y-m-d h:i:s"));
+		$client['TTL']->modify('+1 hour');
+		$client['TTL']->modify('+300 seconds');
+		$client['TTL'] = $client['TTL']->format('Y-m-d h:i:s');
+
 
 		$this->application->make_access_request($client);
 
@@ -365,7 +371,33 @@ class Oauth extends CI_Controller {
 			 );
 
 		if($get_info['grant_type'] == "authorization_code")
+		{
 			$get_info['auth_code'] = $this->input->get('auth_code');
+			if($this->token->auth_code_used($get_info['auth_code']))
+			{
+				$error_args = array(
+					'title' => 'Authorization Error',
+					'message' => "Authorization Failure </br>
+									Authorization Code is already used.",
+					'action' => FALSE
+				);
+
+				$this->session->set_flashdata('error_args',$error_args);
+				redirect("/oauth/error");
+			}
+			if($this->token->auth_code_expired($get_info['auth_code']))
+			{
+				$error_args = array(
+					'title' => 'Authorization Error',
+					'message' => "Authorization Failure </br>
+									Authorization Code is expired.",
+					'action' => FALSE
+				);
+
+				$this->session->set_flashdata('error_args',$error_args);
+				redirect("/oauth/error");
+			}
+		}
 		else 
 		// if($get_info['grant_type'] == "password")
 		// {
@@ -376,11 +408,12 @@ class Oauth extends CI_Controller {
 		if($get_info['grant_type'] == "refresh_token")
 			$get_info['refresh_token'] = $this->input->get('refresh_token');
 
+
+
 		$token = $this->token->token_bundle(false);
 
 
 		print_r(json_encode($token));
-		echo "</br>";
 		
 		$get_info = array_merge($get_info,$token['access_token']);
 

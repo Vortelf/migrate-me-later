@@ -126,7 +126,7 @@
 		{
 			unset($data['application_name']);
 			$data['auth_code'] = bin2hex(openssl_random_pseudo_bytes(16));
-			print_r($data);
+			// print_r($data);
 			$this->db->insert('access_requests', $data);
 			redirect('/oauth/Authorization?auth_code=' . $data['auth_code'] );
 		}
@@ -185,6 +185,9 @@
 				$this->load->view('authorization.php', $data);
 			}
 		}
+
+
+
 
 		// VERY IMPORTANT FUNCTION
 		//
