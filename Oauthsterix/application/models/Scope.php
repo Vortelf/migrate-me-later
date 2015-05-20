@@ -18,6 +18,18 @@
 		function fetch_from_db($scope)
 		{
 			$data = $this->getController()->session->all_userdata();
+			if(!isset($data['logged_in']))
+			{
+				$error_args = array(
+					'title' => 'Authorization Error',
+					'message' => "No Session Found </br>
+									Not Logged In.",
+					'action' => FALSE
+				);
+
+				$this->getController()->session->set_flashdata('error_args',$error_args);
+				redirect("/oauth/error");
+			}
 			$condition = "USERNAME = '" . $data['logged_in']['username'] . "'";
 			$this->db->select($this->scope_to_db($scope));
 			$this->db->from('users');
@@ -44,6 +56,30 @@
 				default: return "*";
 			}
 		}
+
+		public function scope_parse($scope_arr)
+		{
+
+			$scopes = array(
+						'read' => '',
+						'update' => '',
+					);
+			$exploded = (explode(":", $scope_arr));
+			foreach (explode(",", $exploded[1]) as $shrap) {
+				$scopes[$exploded[0]][] .= $shrap;
+			}
+			if(isset($exploded[3]))
+			{
+				foreach (explode(",", $exploded[3]) as $shrap) {
+					$scopes[$exploded[2]][] .= $shrap;
+				}
+
+			}
+
+			return $scopes;
+
+		}
+		
 
 		function getController()
 		{

@@ -251,7 +251,7 @@ class Oauth extends CI_Controller {
 		// redirect("/oauth/authorization/".$client['application_name']."?".$GETREQUEST);
 		// $this->Authorization($client);
 
-		// http://localhost/oauthsterix/oauth/access_request?consumer_id=Ru19lQzS1hpAuwTLQLSoFKHU3GbiBhH2&scope=read:name,email:update:phone_number
+		// http://localhost/oauthsterix/oauth/access_request?consumer_id=Ru19lQzS1hpAuwTLQLSoFKHU3GbiBhH2&scope=read:name,email:update:phone_number&redirect_uri=http://localhost/oauthsterix/oauth/post_test
 	}
 
 
@@ -259,6 +259,7 @@ class Oauth extends CI_Controller {
 	public function Authorization()
 	{
 		$this->load->model('application');
+		$this->load->model('scope');
 		$this->load->view('fragments/style.html');
 
 		$this->form_validation->set_rules('email', 'Email', 'trim|required');
@@ -313,17 +314,13 @@ class Oauth extends CI_Controller {
 			$this->session->set_flashdata('scope',$oldscope);
 		}
 		
-		$scope = $this->application->get_scopes($data['scope']);
+		$scope = $this->scope->scope_parse($data['scope']);
+		// print_r($scope);
 
 
 		$data['scope_description'] = $this->application->get_scope_description_array($data['scope']);
 
-		unset($data['scope']);
-
 		$data['scope'] = $scope;
-
-
-
 
 
 
@@ -364,6 +361,7 @@ class Oauth extends CI_Controller {
 
 	public function collect_tokens()
 	{
+
 		$this->load->model('application');
 		$this->load->model('token');
 
@@ -410,14 +408,32 @@ class Oauth extends CI_Controller {
 		// }
 		// else
 		if($get_info['grant_type'] == "refresh_token")
+		{
 			$get_info['refresh_token'] = $this->input->get('refresh_token');
+			if($this->token->token_expired($get_info['refresh_token'] ))
+			{
+				$error_args = array(
+					'title' => 'Authorization Error',
+					'message' => "Authorization Failure </br>
+									Refresh Token is expired.",
+					'action' => FALSE
+				);
+
+				$this->session->set_flashdata('error_args',$error_args);
+				redirect("/oauth/error");
+			}
+		}
 
 
 
 		$token = $this->token->token_bundle(true);
 
 
-		print_r(json_encode($token));
+		// print_r(json_encode($token));
+		$data['json'] = json_encode($token);
+		$data['redirect_uri'] = $get_info['redirect_uri'];
+		$this->load->view("json_post.php",$data);
+		
 		
 		$access_token = array_merge($get_info,$token['access_token']);
 		$access_token['scope'] = $this->session->flashdata('scope');
@@ -436,6 +452,7 @@ class Oauth extends CI_Controller {
 
 	public function request_information()
 	{
+
 		$this->load->model('application');
 		$this->load->model('token');
 		$this->load->model('scope');
@@ -459,24 +476,29 @@ class Oauth extends CI_Controller {
 
 		
 		$scopes = $this->token->get_scopes($data['access_token']);
+		if(!$scopes)
+		{
+			$error_args = array(
+				'title' => 'Authorization Error',
+				'message' => "Total Failure. </br>
+								Nor even we can explain what happened.",
+				'action' => FALSE
+			);
 
-		// if(!$scopes)
-		// {
-		// 	$error_args = array(
-		// 		'title' => 'Authorization Error',
-		// 		'message' => "Total Failure. </br>
-		// 						Nor even we can explain what happened.",
-		// 		'action' => FALSE
-		// 	);
+			$this->session->set_flashdata('error_args',$error_args);
+			redirect("/oauth/error");
+		}
 
-		// 	$this->session->set_flashdata('error_args',$error_args);
-		// 	redirect("/oauth/error");
-		// }
-
-		$scope_array = $this->application->get_scopes($scopes);
+		$scope_array = $this->scope->scope_parse($scopes);
+		// print_r($scope_array);
 		$read = $scope_array['read'];
 
 		print_r( json_encode($this->scope->get_scope_information($read)) );
+		$data['json'] = json_encode($this->scope->get_scope_information($read));
+		$data['redirect_uri'] = $this->input->get('redirect_uri');
+		
+		$this->load->view("json_post.php",$data);
+		// http://localhost/oauthsterix/oauth/request_information?access_token=16f8eb5f5e84e84c937e5751e2d8b62a54e888f053b83d1d3e2c7dd94562e477&redirect_uri=http://localhost/oauthsterix/oauth/post_test
 	}
 
 
@@ -548,6 +570,11 @@ class Oauth extends CI_Controller {
 		else
 			$this->load->view('fragments/errorception.php');
 
+	}
+
+	public function post_test()
+	{
+		print_r($this->input->post());
 	}
 
 }

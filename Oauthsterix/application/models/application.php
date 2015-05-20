@@ -51,9 +51,8 @@
 						'read' => '',
 						'update' => '',
 					);
-
+			print_r($scope_arr);
 			$exploded = (explode(":", $scope_arr));
-
 			foreach (explode(",", $exploded[1]) as $shrap) {
 				$scopes[$exploded[0]][] .= $shrap;
 			}

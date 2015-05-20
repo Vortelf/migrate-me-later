@@ -87,13 +87,16 @@
 
 			$result = new DateTime($result);
 
-			$this->db->select('TTL');
-			$this->db->from('access_requests');
-			$this->db->where($condition);
-			$this->db->delete();
+			
 
-			if( strtotime($result->format('Y-m-d h:i:s')) <= strtotime($date->format('Y-m-d h:i:s')) ) 
+			if( strtotime($result->format('Y-m-d h:i:s')) <= strtotime($date->format('Y-m-d h:i:s')) )
+			{
+				$this->db->select('TTL');
+				$this->db->from('access_requests');
+				$this->db->where($condition);
+				$this->db->delete();
 				return true; 
+			}
 			else
 				return false;
 
@@ -120,8 +123,14 @@
 			$result = new DateTime($result);
 
 
-			if( strtotime($result->format('Y-m-d h:i:s')) <= strtotime($date->format('Y-m-d h:i:s')) ) 
-				return true; 
+			if( strtotime($result->format('Y-m-d h:i:s')) <= strtotime($date->format('Y-m-d h:i:s')) )
+			{
+				$this->db->select('TTL');
+				$this->db->from('token');
+				$this->db->where($condition);
+				$this->db->delete(); 
+				return true;
+			}
 			else
 				return false;
 
@@ -145,7 +154,7 @@
 
 		}
 
-		
+
 			
 
 		function getController()
